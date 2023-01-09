@@ -5,6 +5,7 @@ const { ValidationError } = require('../errors/validationError');
 
 const notExistUsersError = new NotExistError('Пользователи не найдены');
 const notExistUserError = new NotExistError('Пользователь по указанному _id не найден.');
+const validationGetUserError = new ValidationError('Переданы некорректные данные.');
 const validationCreateUserError = new ValidationError('Переданы некорректные данные при создании пользователя.');
 const validationEditUserError = new ValidationError('Переданы некорректные данные при обновлении профиля.');
 const internalServerError = new InternalServerError('');
@@ -35,7 +36,8 @@ const getUser = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(notExistUserError.statusCode).send({ message: notExistUserError.message });
+        res.status(validationGetUserError.statusCode)
+          .send({ message: validationGetUserError.message });
         return;
       }
       res.status(internalServerError.statusCode).send({ message: err.message });
