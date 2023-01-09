@@ -1,16 +1,41 @@
 const User = require('../models/user');
+const { InternalServerError } = require('../errors/internalServerError');
+const { NotExistError } = require('../errors/notExistError');
+const { ValidationError } = require('../errors/validationError');
+
+const notExistUsersError = new NotExistError('Пользователи не найдены');
+const notExistUserError = new NotExistError('Пользователь по указанному _id не найден.');
+const validationCreateUserError = new ValidationError('Переданы некорректные данные при создании пользователя.');
+const validationEditUserError = new ValidationError('Переданы некорректные данные при обновлении профиля.');
+const internalServerError = new InternalServerError('');
 
 const getUsers = (req, res) => {
   User.find({})
-    .then((users) => res.send(users))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .then((users) => {
+      if (users.length === 0) {
+        res.status(notExistUsersError.statusCode).send({ message: notExistUsersError.message });
+        return;
+      }
+      res.send(users);
+    })
+    .catch((err) => {
+      res.status(internalServerError.status).send({ message: err.message });
+    });
 };
 
 const getUser = (req, res) => {
   const { id } = req.params;
   User.findById(id)
-    .then((user) => res.send(user))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .then((user) => {
+      if (!user) {
+        res.status(notExistUserError.statusCode).send({ message: notExistUserError.message });
+        return;
+      }
+      res.send(user);
+    })
+    .catch((err) => {
+      res.status(internalServerError.status).send({ message: err.message });
+    });
 };
 
 const createUser = (req, res) => {
@@ -18,7 +43,14 @@ const createUser = (req, res) => {
 
   User.create({ name, about, avatar })
     .then((user) => res.send(user))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(validationCreateUserError.statusCode)
+          .send({ message: validationCreateUserError.message });
+        return;
+      }
+      res.status(internalServerError.status).send({ message: err.message });
+    });
 };
 
 const editUserInfo = (req, res) => {
@@ -27,10 +59,22 @@ const editUserInfo = (req, res) => {
   User.findByIdAndUpdate(id, { name, about }, {
     new: true,
     runValidators: true,
-    upsert: true,
   })
-    .then((user) => res.send(user))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .then((user) => {
+      if (!user) {
+        res.status(notExistUserError.statusCode).send({ message: notExistUserError.message });
+        return;
+      }
+      res.send(user);
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(validationEditUserError.statusCode)
+          .send({ message: validationEditUserError.message });
+        return;
+      }
+      res.status(internalServerError.status).send({ message: err.message });
+    });
 };
 
 const editUserAvatar = (req, res) => {
@@ -39,10 +83,22 @@ const editUserAvatar = (req, res) => {
   User.findByIdAndUpdate(id, { avatar }, {
     new: true,
     runValidators: true,
-    upsert: true,
   })
-    .then((user) => res.send(user))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .then((user) => {
+      if (!user) {
+        res.status(notExistUserError.statusCode).send({ message: notExistUserError.message });
+        return;
+      }
+      res.send(user);
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(validationEditUserError.statusCode)
+          .send({ message: validationEditUserError.message });
+        return;
+      }
+      res.status(internalServerError.status).send({ message: err.message });
+    });
 };
 
 module.exports = {

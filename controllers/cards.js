@@ -1,25 +1,55 @@
 const Card = require('../models/card');
+const { InternalServerError } = require('../errors/internalServerError');
+const { NotExistError } = require('../errors/notExistError');
+const { ValidationError } = require('../errors/validationError');
+
+const notExistCardsError = new NotExistError('Карточки не найдены');
+const notExistCardError = new NotExistError('Карточка с указанным _id не найдена');
+const validationCardError = new ValidationError('Переданы некорректные данные при создании карточки');
+const internalServerError = new InternalServerError();
 
 const getCards = (req, res) => {
   Card.find({})
     .populate('owner')
     .populate('likes')
-    .then((cards) => res.send(cards))
-    .catch((err) => res.send({ message: err.message }));
+    .then((cards) => {
+      if (cards.length === 0) {
+        res.status(notExistCardsError.statusCode).send({ message: notExistCardsError.message });
+        return;
+      }
+      res.send(cards);
+    })
+    .catch((err) => {
+      res.status(internalServerError.statusCode).send({ message: err.message });
+    });
 };
 
 const createCard = (req, res) => {
   const { name, link, ownerId } = req.body;
   Card.create({ name, link, owner: ownerId })
     .then((card) => res.send(card))
-    .catch((err) => res.send({ message: err.message }));
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        res.status(validationCardError.statusCode).send({ message: validationCardError.message });
+        return;
+      }
+      res.status(internalServerError.statusCode).send({ message: err.message });
+    });
 };
 
 const deleteCard = (req, res) => {
   const { id } = req.params;
   Card.findByIdAndRemove(id)
-    .then(() => res.send({ message: 'success' }))
-    .catch((err) => res.send({ message: err.message }));
+    .then((card) => {
+      if (card === null) {
+        res.status(notExistCardError.statusCode).send({ message: notExistCardError.message });
+        return;
+      }
+      res.send({ message: 'Карточка успешно удалена' });
+    })
+    .catch((err) => {
+      res.status(internalServerError.statusCode).send({ message: err.message });
+    });
 };
 
 const addLikesCard = (req, res) => {
@@ -34,11 +64,22 @@ const addLikesCard = (req, res) => {
     },
     {
       new: true,
-      upsert: true,
     },
   )
-    .then((card) => res.send(card))
-    .catch((err) => res.send({ message: err.message }));
+    .then((card) => {
+      if (card === null) {
+        res.status(notExistCardError.statusCode).send({ message: notExistCardError.message });
+        return;
+      }
+      res.send(card);
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(notExistCardError.statusCode).send({ message: notExistCardError.message });
+        return;
+      }
+      res.status(internalServerError.statusCode).send({ message: err.message });
+    });
 };
 
 const removeLikesCard = (req, res) => {
@@ -53,11 +94,22 @@ const removeLikesCard = (req, res) => {
     },
     {
       new: true,
-      upsert: true,
     },
   )
-    .then((card) => res.send(card))
-    .catch((err) => res.send({ message: err.message }));
+    .then((card) => {
+      if (card === null) {
+        res.status(notExistCardError.statusCode).send({ message: notExistCardError.message });
+        return;
+      }
+      res.send(card);
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(notExistCardError.statusCode).send({ message: notExistCardError.message });
+        return;
+      }
+      res.status(internalServerError.statusCode).send({ message: err.message });
+    });
 };
 
 module.exports = {
