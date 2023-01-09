@@ -20,7 +20,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/users', require('./routes/users'));
-// app.use('/directors', require('./routes/cards'));
+app.use('/cards', require('./routes/cards'));
 
 app.get('/', (req, res) => {
   res.send('Hello World!');
