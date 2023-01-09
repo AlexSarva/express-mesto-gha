@@ -6,4 +6,4 @@ class NotExistError extends Error {
   }
 }
 
-module.exports = {NotExistError};
+module.exports = { NotExistError };
