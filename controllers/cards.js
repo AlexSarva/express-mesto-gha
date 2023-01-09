@@ -3,7 +3,7 @@ const { InternalServerError } = require('../errors/internalServerError');
 const { NotExistError } = require('../errors/notExistError');
 const { ValidationError } = require('../errors/validationError');
 
-const notExistCardsError = new NotExistError('Карточки не найдены');
+// const notExistCardsError = new NotExistError('Карточки не найдены');
 const notExistCardError = new NotExistError('Карточка с указанным _id не найдена');
 const validationCardLikeError = new ValidationError('Переданы некорректные данные');
 const validationCardError = new ValidationError('Переданы некорректные данные при создании карточки');
@@ -14,10 +14,10 @@ const getCards = (req, res) => {
     .populate('owner')
     .populate('likes')
     .then((cards) => {
-      if (cards.length === 0) {
-        res.status(notExistCardsError.statusCode).send({ message: notExistCardsError.message });
-        return;
-      }
+      // if (cards.length === 0) {
+      //   res.status(notExistCardsError.statusCode).send({ message: notExistCardsError.message });
+      //   return;
+      // }
       res.send(cards);
     })
     .catch((err) => {

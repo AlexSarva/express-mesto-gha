@@ -24,7 +24,7 @@ app.use('/cards', require('./routes/cards'));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('*', (req, res) => {
+app.patch('*', (req, res) => {
   res.sendStatus(404).send({ message: 'Not found' });
 });
 app.listen(PORT, () => {
