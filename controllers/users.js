@@ -19,7 +19,7 @@ const getUsers = (req, res) => {
       res.send(users);
     })
     .catch((err) => {
-      res.status(internalServerError.status).send({ message: err.message });
+      res.status(internalServerError.statusCode).send({ message: err.message });
     });
 };
 
@@ -53,7 +53,7 @@ const createUser = (req, res) => {
           .send({ message: validationCreateUserError.message });
         return;
       }
-      res.status(internalServerError.status).send({ message: err.message });
+      res.status(internalServerError.statusCode).send({ message: err.message });
     });
 };
 
@@ -77,7 +77,7 @@ const editUserInfo = (req, res) => {
           .send({ message: validationEditUserError.message });
         return;
       }
-      res.status(internalServerError.status).send({ message: err.message });
+      res.status(internalServerError.statusCode).send({ message: err.message });
     });
 };
 
@@ -101,7 +101,7 @@ const editUserAvatar = (req, res) => {
           .send({ message: validationEditUserError.message });
         return;
       }
-      res.status(internalServerError.status).send({ message: err.message });
+      res.status(internalServerError.statusCode).send({ message: err.message });
     });
 };
 
