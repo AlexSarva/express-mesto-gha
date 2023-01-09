@@ -21,8 +21,34 @@ const createUser = (req, res) => {
     .catch((err) => res.status(500).send({ message: err.message }));
 };
 
+const editUserInfo = (req, res) => {
+  const id = req.user._id;
+  const { name, about } = req.body;
+  User.findByIdAndUpdate(id, { name, about }, {
+    new: true,
+    runValidators: true,
+    upsert: true,
+  })
+    .then((user) => res.send(user))
+    .catch((err) => res.status(500).send({ message: err.message }));
+};
+
+const editUserAvatar = (req, res) => {
+  const id = req.user._id;
+  const { avatar } = req.body;
+  User.findByIdAndUpdate(id, { avatar }, {
+    new: true,
+    runValidators: true,
+    upsert: true,
+  })
+    .then((user) => res.send(user))
+    .catch((err) => res.status(500).send({ message: err.message }));
+};
+
 module.exports = {
   getUsers,
   getUser,
   createUser,
+  editUserInfo,
+  editUserAvatar,
 };
