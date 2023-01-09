@@ -5,6 +5,7 @@ const { ValidationError } = require('../errors/validationError');
 
 const notExistCardsError = new NotExistError('Карточки не найдены');
 const notExistCardError = new NotExistError('Карточка с указанным _id не найдена');
+const validationCardLikeError = new ValidationError('Переданы некорректные данные');
 const validationCardError = new ValidationError('Переданы некорректные данные при создании карточки');
 const internalServerError = new InternalServerError();
 
@@ -49,6 +50,10 @@ const deleteCard = (req, res) => {
       res.send({ message: 'Карточка успешно удалена' });
     })
     .catch((err) => {
+      if (err.name === 'CastError') {
+        res.status(validationCardError.statusCode).send({ message: validationCardError.message });
+        return;
+      }
       res.status(internalServerError.statusCode).send({ message: err.message });
     });
 };
@@ -76,7 +81,8 @@ const addLikesCard = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(notExistCardError.statusCode).send({ message: notExistCardError.message });
+        res.status(validationCardLikeError.statusCode)
+          .send({ message: validationCardLikeError.message });
         return;
       }
       res.status(internalServerError.statusCode).send({ message: err.message });
@@ -106,7 +112,8 @@ const removeLikesCard = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        res.status(notExistCardError.statusCode).send({ message: notExistCardError.message });
+        res.status(validationCardLikeError.statusCode)
+          .send({ message: validationCardLikeError.message });
         return;
       }
       res.status(internalServerError.statusCode).send({ message: err.message });

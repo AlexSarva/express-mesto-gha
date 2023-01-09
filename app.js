@@ -22,11 +22,11 @@ app.use((req, res, next) => {
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
-});
-
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('*', (req, res) => {
+  res.sendStatus(404).send({ message: 'Not found' });
+});
 app.listen(PORT, () => {
 
 });
