@@ -34,7 +34,11 @@ const getUser = (req, res) => {
       res.send(user);
     })
     .catch((err) => {
-      res.status(internalServerError.status).send({ message: err.message });
+      if (err.name === 'CastError') {
+        res.status(notExistUserError.statusCode).send({ message: notExistUserError.message });
+        return;
+      }
+      res.status(internalServerError.statusCode).send({ message: err.message });
     });
 };
 
