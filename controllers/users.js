@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const { NotExistError } = require('../errors/notExistError');
+
 const { JWT_SECRET } = process.env;
 
 const getUsers = (req, res, next) => {

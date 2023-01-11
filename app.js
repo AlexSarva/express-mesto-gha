@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
+const { errors } = require('celebrate');
 const auth = require('./middlewares/auth');
 const { ValidationError } = require('./errors/validationError');
 const { ConflictError } = require('./errors/conflictError');
@@ -38,10 +39,12 @@ app.patch('*', (req, res) => {
   res.status(404).send({ message: 'Not found' });
 });
 
+app.use(errors());
 app.use((err, req, res, next) => {
   const {
     statusCode, message, name, code,
   } = err;
+
   if (name === 'ValidationError') {
     const validationError = new ValidationError('Переданы некорректные данные.');
     res.status(validationError.statusCode).send({ message: validationError.message });
@@ -61,12 +64,10 @@ app.use((err, req, res, next) => {
 
   const internalServerError = new InternalServerError('На сервере произошла ошибка');
 
-  res.status(statusCode ? internalServerError.statusCode : 0).send({
+  res.status(statusCode ? internalServerError.statusCode : 404).send({
     message: statusCode === 500
       ? internalServerError.message
       : message,
-    err: name,
-    code,
   });
 
   next();
