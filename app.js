@@ -45,6 +45,8 @@ app.use((err, req, res, next) => {
     statusCode, message, name, code,
   } = err;
 
+  console.log(err.statusCode);
+
   if (name === 'ValidationError') {
     const validationError = new ValidationError('Переданы некорректные данные.');
     res.status(validationError.statusCode).send({ message: validationError.message });
@@ -64,7 +66,7 @@ app.use((err, req, res, next) => {
 
   const internalServerError = new InternalServerError('На сервере произошла ошибка');
 
-  res.status(statusCode ? internalServerError.statusCode : 404).send({
+  res.status(statusCode ? statusCode : 500).send({
     message: statusCode === 500
       ? internalServerError.message
       : message,
