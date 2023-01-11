@@ -1,9 +1,9 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const { InternalServerError } = require('../errors/internalServerError');
 const { NotExistError } = require('../errors/notExistError');
 const { ValidationError } = require('../errors/validationError');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 
 const notExistUsersError = new NotExistError('Пользователи не найдены');
 const notExistUserError = new NotExistError('Пользователь по указанному _id не найден.');
@@ -26,23 +26,36 @@ const getUsers = (req, res) => {
     });
 };
 
+const getMeInfo = (req, res) => {
+  User.findById(req.user._id)
+    .then((user) => {
+      if (!user) {
+        res.status(notExistUserError.statusCode).send({ message: notExistUserError.message });
+        return;
+      }
+      res.send(user);
+    })
+    .catch((err) => {
+      res.status(internalServerError.statusCode).send({ message: err.message });
+    });
+};
 
 const login = (req, res) => {
   const { email, password } = req.body;
+  const tokenType = 'Bearer';
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
-      const token = 'Bearer ' + jwt.sign({ _id: user._id }, 'super-strong-secret', { expiresIn: '1w' })
+      const token = tokenType.concat(' ', jwt.sign({ _id: user._id }, 'super-strong-secret', { expiresIn: '1w' }));
       res.cookie('jwt', token, { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 * 7 })
         .send({
-        token,
-      });
+          token,
+        });
     })
     .catch((err) => {
       res.status(401).send({ message: err.message });
     });
-
-}
+};
 
 const getUser = (req, res) => {
   const { id } = req.params;
@@ -65,12 +78,14 @@ const getUser = (req, res) => {
 };
 
 const createUser = (req, res) => {
-  const { name, about, avatar, email, password } = req.body;
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
 
   bcrypt.hash(password, 10)
-    .then((hash) =>
-      User.create({ name, about, avatar, email, password: hash })
-    )
+    .then((hash) => User.create({
+      name, about, avatar, email, password: hash,
+    }))
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
@@ -137,4 +152,5 @@ module.exports = {
   editUserInfo,
   editUserAvatar,
   login,
+  getMeInfo,
 };

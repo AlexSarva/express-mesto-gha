@@ -39,7 +39,7 @@ const userSchema = new mongoose.Schema({
   },
 }, { versionKey: false });
 
-userSchema.statics.findUserByCredentials = function (email, password) {
+function findUser(email, password) {
   return this.findOne({ email })
     .then((user) => {
       if (!user) {
@@ -55,6 +55,8 @@ userSchema.statics.findUserByCredentials = function (email, password) {
           return user;
         });
     });
-};
+}
+
+userSchema.statics.findUserByCredentials = findUser;
 
 module.exports = mongoose.model('user', userSchema);

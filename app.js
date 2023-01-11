@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
+const auth = require('./middlewares/auth');
 
 const { PORT } = process.env;
 const app = express();
@@ -26,8 +27,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use('/', require('./routes/auth'));
 
-app.use('/users', require('./routes/users'));
-app.use('/cards', require('./routes/cards'));
+app.use('/users', auth, require('./routes/users'));
+app.use('/cards', auth, require('./routes/cards'));
 
 app.patch('*', (req, res) => {
   res.status(404).send({ message: 'Not found' });
