@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-
+const { JWT_SECRET } = process.env;
 const handleAuthError = (res) => {
   res
     .status(401)
@@ -22,7 +22,7 @@ const auth = (req, res, next) => {
   let payload;
 
   try {
-    payload = jwt.verify(token, 'super-strong-secret');
+    payload = jwt.verify(token, JWT_SECRET);
   } catch (err) {
     return handleAuthError(res);
   }

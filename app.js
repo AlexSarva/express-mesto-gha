@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -7,6 +8,7 @@ const cookieParser = require('cookie-parser');
 const auth = require('./middlewares/auth');
 const { ValidationError } = require('./errors/validationError');
 const { ConflictError } = require('./errors/conflictError');
+const { InternalServerError } = require('./errors/internalServerError');
 
 const { PORT } = process.env;
 const app = express();
@@ -38,7 +40,7 @@ app.patch('*', (req, res) => {
 
 app.use((err, req, res, next) => {
   const {
-    statusCode = 500, message, name, code,
+    statusCode, message, name, code,
   } = err;
   if (name === 'ValidationError') {
     const validationError = new ValidationError('Переданы некорректные данные.');
@@ -56,9 +58,12 @@ app.use((err, req, res, next) => {
     res.status(conflictError.statusCode).send({ message: conflictError.message });
     return;
   }
-  res.status(statusCode).send({
+
+  const internalServerError = new InternalServerError('На сервере произошла ошибка');
+
+  res.status(statusCode ? internalServerError.statusCode : 0).send({
     message: statusCode === 500
-      ? 'На сервере произошла ошибка'
+      ? internalServerError.message
       : message,
     err: name,
     code,
