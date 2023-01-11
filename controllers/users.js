@@ -35,8 +35,9 @@ const login = (req, res, next) => {
     .then((user) => {
       const token = tokenType.concat(' ', jwt.sign({ _id: user._id }, JWT_SECRET, { expiresIn: '1w' }));
       res.cookie('jwt', token, { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 * 7 })
+        .status(200)
         .send({
-          token,
+          message: token,
         });
     })
     .catch(next);
