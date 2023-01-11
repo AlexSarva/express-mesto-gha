@@ -3,6 +3,7 @@ const { InternalServerError } = require('../errors/internalServerError');
 const { NotExistError } = require('../errors/notExistError');
 const { ValidationError } = require('../errors/validationError');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const notExistUsersError = new NotExistError('Пользователи не найдены');
 const notExistUserError = new NotExistError('Пользователь по указанному _id не найден.');
@@ -24,6 +25,24 @@ const getUsers = (req, res) => {
       res.status(internalServerError.statusCode).send({ message: err.message });
     });
 };
+
+
+const login = (req, res) => {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, 'super-strong-secret', { expiresIn: '1w' })
+      res.cookie('jwt', token, { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 * 7 })
+        .send({
+        token,
+      });
+    })
+    .catch((err) => {
+      res.status(401).send({ message: err.message });
+    });
+
+}
 
 const getUser = (req, res) => {
   const { id } = req.params;
@@ -117,4 +136,5 @@ module.exports = {
   createUser,
   editUserInfo,
   editUserAvatar,
+  login,
 };
