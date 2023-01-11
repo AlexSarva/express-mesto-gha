@@ -32,7 +32,7 @@ const login = (req, res) => {
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'super-strong-secret', { expiresIn: '1w' })
+      const token = 'Bearer ' + jwt.sign({ _id: user._id }, 'super-strong-secret', { expiresIn: '1w' })
       res.cookie('jwt', token, { httpOnly: true, maxAge: 1000 * 60 * 60 * 24 * 7 })
         .send({
         token,

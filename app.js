@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
+const cookieParser = require('cookie-parser');
 
 const { PORT } = process.env;
 const app = express();
@@ -14,20 +15,16 @@ const limiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 
-app.use(helmet());
-app.use(limiter);
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
 mongoose.set('strictQuery', false);
 mongoose.connect('mongodb://localhost:27017/mestodb');
 
-app.use((req, res, next) => {
-  req.user = {
-    _id: '63bc2e99eef86792118501c4',
-  };
-  next();
-});
+app.use(helmet());
+app.use(limiter);
+app.use(cookieParser());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use('/', require('./routes/auth'));
 
 app.use('/users', require('./routes/users'));
 app.use('/cards', require('./routes/cards'));
