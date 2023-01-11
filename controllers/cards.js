@@ -1,64 +1,48 @@
 const Card = require('../models/card');
-const { InternalServerError } = require('../errors/internalServerError');
 const { NotExistError } = require('../errors/notExistError');
-const { ValidationError } = require('../errors/validationError');
+const { PermissionError } = require('../errors/permissionError');
 
-// const notExistCardsError = new NotExistError('Карточки не найдены');
-const notExistCardError = new NotExistError('Карточка с указанным _id не найдена');
-const validationCardLikeError = new ValidationError('Переданы некорректные данные');
-const validationCardError = new ValidationError('Переданы некорректные данные при создании карточки');
-const internalServerError = new InternalServerError();
-
-const getCards = (req, res) => {
+const getCards = (req, res, next) => {
   Card.find({})
     .populate('owner')
     .populate('likes')
     .then((cards) => {
-      // if (cards.length === 0) {
-      //   res.status(notExistCardsError.statusCode).send({ message: notExistCardsError.message });
-      //   return;
-      // }
       res.send(cards);
     })
-    .catch((err) => {
-      res.status(internalServerError.statusCode).send({ message: err.message });
-    });
+    .catch(next);
 };
 
-const createCard = (req, res) => {
+const createCard = (req, res, next) => {
   const userId = req.user._id;
   const { name, link } = req.body;
   Card.create({ name, link, owner: userId })
     .then((card) => res.send(card))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(validationCardError.statusCode).send({ message: validationCardError.message });
-        return;
-      }
-      res.status(internalServerError.statusCode).send({ message: err.message });
-    });
+    .catch(next);
 };
 
-const deleteCard = (req, res) => {
+const deleteCard = (req, res, next) => {
   const { id } = req.params;
-  Card.findByIdAndRemove(id)
+  Card.findById(id)
     .then((card) => {
       if (card === null) {
-        res.status(notExistCardError.statusCode).send({ message: notExistCardError.message });
-        return;
+        throw new NotExistError('Карточка с указанным _id не найдена');
       }
-      res.send({ message: 'Карточка успешно удалена' });
+
+      if (card.owner.toString() !== req.user._id) {
+        throw new PermissionError('Нет прав для удаления этой карточки');
+      }
+
+      return card;
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(validationCardError.statusCode).send({ message: validationCardError.message });
-        return;
-      }
-      res.status(internalServerError.statusCode).send({ message: err.message });
-    });
+    .then((card) => Card.findByIdAndRemove(card._id)
+      .then(() => {
+        res.status(200).send({ message: 'Карточка успешно удалена' });
+      })
+      .catch(next))
+    .catch(next);
 };
 
-const addLikesCard = (req, res) => {
+const addLikesCard = (req, res, next) => {
   const userId = req.user._id;
   const { cardId } = req.params;
   Card.findByIdAndUpdate(
@@ -74,22 +58,14 @@ const addLikesCard = (req, res) => {
   )
     .then((card) => {
       if (card === null) {
-        res.status(notExistCardError.statusCode).send({ message: notExistCardError.message });
-        return;
+        throw new NotExistError('Карточка с указанным _id не найдена');
       }
       res.send(card);
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(validationCardLikeError.statusCode)
-          .send({ message: validationCardLikeError.message });
-        return;
-      }
-      res.status(internalServerError.statusCode).send({ message: err.message });
-    });
+    .catch(next);
 };
 
-const removeLikesCard = (req, res) => {
+const removeLikesCard = (req, res, next) => {
   const userId = req.user._id;
   const { cardId } = req.params;
   Card.findByIdAndUpdate(
@@ -105,19 +81,11 @@ const removeLikesCard = (req, res) => {
   )
     .then((card) => {
       if (card === null) {
-        res.status(notExistCardError.statusCode).send({ message: notExistCardError.message });
-        return;
+        throw new NotExistError('Карточка с указанным _id не найдена');
       }
       res.send(card);
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(validationCardLikeError.statusCode)
-          .send({ message: validationCardLikeError.message });
-        return;
-      }
-      res.status(internalServerError.statusCode).send({ message: err.message });
-    });
+    .catch(next);
 };
 
 module.exports = {
