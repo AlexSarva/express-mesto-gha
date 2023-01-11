@@ -5,6 +5,8 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const auth = require('./middlewares/auth');
+const { ValidationError } = require('./errors/validationError');
+const { ConflictError } = require('./errors/conflictError');
 
 const { PORT } = process.env;
 const app = express();
@@ -32,6 +34,37 @@ app.use('/cards', auth, require('./routes/cards'));
 
 app.patch('*', (req, res) => {
   res.status(404).send({ message: 'Not found' });
+});
+
+app.use((err, req, res, next) => {
+  const {
+    statusCode = 500, message, name, code,
+  } = err;
+  if (name === 'ValidationError') {
+    const validationError = new ValidationError('Переданы некорректные данные.');
+    res.status(validationError.statusCode).send({ message: validationError.message });
+    return;
+  }
+
+  if (name === 'CastError') {
+    const validationError = new ValidationError('Переданы некорректные данные.');
+    res.status(validationError.statusCode).send({ message: validationError.message });
+    return;
+  }
+  if (code === 11000) {
+    const conflictError = new ConflictError('Пользователь с таким email уже существует');
+    res.status(conflictError.statusCode).send({ message: conflictError.message });
+    return;
+  }
+  res.status(statusCode).send({
+    message: statusCode === 500
+      ? 'На сервере произошла ошибка'
+      : message,
+    err: name,
+    code,
+  });
+
+  next();
 });
 app.listen(PORT, () => {
 
