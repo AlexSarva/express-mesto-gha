@@ -47,6 +47,10 @@ const deleteCard = (req, res) => {
         res.status(notExistCardError.statusCode).send({ message: notExistCardError.message });
         return;
       }
+      if (card.owner !== req.user._id) {
+        res.status(401).send({ message: 'Это не ваша карточка' });
+        return;
+      }
       res.send({ message: 'Карточка успешно удалена' });
     })
     .catch((err) => {
