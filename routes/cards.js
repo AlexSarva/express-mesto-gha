@@ -13,7 +13,7 @@ router.delete('/:id', celebrate({
 router.post('/', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
-    link: Joi.string().uri(),
+    link: Joi.string().pattern(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)/),
   }),
 }), createCard);
 router.put('/:cardId/likes', celebrate({
