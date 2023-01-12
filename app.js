@@ -7,9 +7,8 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 const { errors } = require('celebrate');
 const auth = require('./middlewares/auth');
-const { ValidationError } = require('./errors/validationError');
-const { ConflictError } = require('./errors/conflictError');
 const { InternalServerError } = require('./errors/internalServerError');
+const { NotFoundError } = require('./errors/notFoundError');
 
 const { PORT } = process.env;
 const app = express();
@@ -35,32 +34,15 @@ app.use('/', require('./routes/auth'));
 app.use('/users', auth, require('./routes/users'));
 app.use('/cards', auth, require('./routes/cards'));
 
-app.patch('*', (req, res) => {
-  res.status(404).send({ message: 'Not found' });
+app.use('*', auth, () => {
+  throw new NotFoundError('Страница не найдена');
 });
 
 app.use(errors());
 app.use((err, req, res, next) => {
   const {
-    statusCode, message, name, code,
+    statusCode, message,
   } = err;
-
-  if (name === 'ValidationError') {
-    const validationError = new ValidationError('Переданы некорректные данные.');
-    res.status(validationError.statusCode).send({ message: validationError.message });
-    return;
-  }
-
-  if (name === 'CastError') {
-    const validationError = new ValidationError('Переданы некорректные данные.');
-    res.status(validationError.statusCode).send({ message: validationError.message });
-    return;
-  }
-  if (code === 11000) {
-    const conflictError = new ConflictError('Пользователь с таким email уже существует');
-    res.status(conflictError.statusCode).send({ message: conflictError.message });
-    return;
-  }
 
   const internalServerError = new InternalServerError('На сервере произошла ошибка');
 

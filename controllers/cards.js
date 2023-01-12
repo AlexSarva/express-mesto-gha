@@ -1,10 +1,11 @@
 const Card = require('../models/card');
 const { NotExistError } = require('../errors/notExistError');
 const { PermissionError } = require('../errors/permissionError');
+const { ValidationError } = require('../errors/validationError');
 
 const getCards = (req, res, next) => {
   Card.find({})
-    .populate('owner')
+    // .populate('owner')
     .populate('likes')
     .then((cards) => {
       res.send(cards);
@@ -17,21 +18,23 @@ const createCard = (req, res, next) => {
   const { name, link } = req.body;
   Card.create({ name, link, owner: userId })
     .then((card) => res.send(card))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new ValidationError('Переданы некорректные данные.'));
+        return;
+      }
+      next(err);
+    });
 };
 
 const deleteCard = (req, res, next) => {
   const { id } = req.params;
   Card.findById(id)
+    .orFail(new NotExistError('Карточка с указанным _id не найдена'))
     .then((card) => {
-      if (card === null) {
-        throw new NotExistError('Карточка с указанным _id не найдена');
-      }
-
       if (card.owner.toString() !== req.user._id) {
         throw new PermissionError('Нет прав для удаления этой карточки');
       }
-
       return card;
     })
     .then((card) => Card.findByIdAndRemove(card._id)
@@ -39,7 +42,13 @@ const deleteCard = (req, res, next) => {
         res.status(200).send({ message: 'Карточка успешно удалена' });
       })
       .catch(next))
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new ValidationError('Переданы некорректные данные.'));
+        return;
+      }
+      next(err);
+    });
 };
 
 const addLikesCard = (req, res, next) => {
@@ -56,13 +65,17 @@ const addLikesCard = (req, res, next) => {
       new: true,
     },
   )
+    .orFail(new NotExistError('Карточка с указанным _id не найдена'))
     .then((card) => {
-      if (card === null) {
-        throw new NotExistError('Карточка с указанным _id не найдена');
-      }
       res.send(card);
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new ValidationError('Переданы некорректные данные.'));
+        return;
+      }
+      next(err);
+    });
 };
 
 const removeLikesCard = (req, res, next) => {
@@ -79,13 +92,17 @@ const removeLikesCard = (req, res, next) => {
       new: true,
     },
   )
+    .orFail(new NotExistError('Карточка с указанным _id не найдена'))
     .then((card) => {
-      if (card === null) {
-        throw new NotExistError('Карточка с указанным _id не найдена');
-      }
       res.send(card);
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new ValidationError('Переданы некорректные данные.'));
+        return;
+      }
+      next(err);
+    });
 };
 
 module.exports = {
