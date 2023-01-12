@@ -34,7 +34,8 @@ app.use('/', require('./routes/auth'));
 app.use('/users', auth, require('./routes/users'));
 app.use('/cards', auth, require('./routes/cards'));
 
-app.use('*', auth, () => {
+// если добавить auth - не проходят проверки - https://pastenow.ru/KXFDU
+app.use('*', () => {
   throw new NotFoundError('Страница не найдена');
 });
 
