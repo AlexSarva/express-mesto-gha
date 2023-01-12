@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const { NotExistError } = require('../errors/notExistError');
+const { NotFoundError } = require('../errors/notFoundError');
 const { ConflictError } = require('../errors/conflictError');
 const { ValidationError } = require('../errors/validationError');
 
@@ -17,12 +17,12 @@ const getUsers = (req, res, next) => {
 
 const getMeInfo = (req, res, next) => {
   User.findById(req.user._id)
-    .orFail(new NotExistError('Пользователь по указанному _id не найден.'))
+    .orFail(new NotFoundError('Пользователь по указанному _id не найден.'))
     .then((user) => {
       res.send(user);
     })
     .catch((err) => {
-      if (err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         next(new ValidationError('Переданы некорректные данные.'));
         return;
       }
@@ -49,12 +49,12 @@ const login = (req, res, next) => {
 const getUser = (req, res, next) => {
   const { id } = req.params;
   User.findById(id)
-    .orFail(new NotExistError('Пользователь по указанному _id не найден.'))
+    .orFail(new NotFoundError('Пользователь по указанному _id не найден.'))
     .then((user) => {
       res.send(user);
     })
     .catch((err) => {
-      if (err.name === 'ValidationError' || err.name === 'CastError') {
+      if (err.name === 'CastError') {
         next(new ValidationError('Переданы некорректные данные.'));
         return;
       }
@@ -80,6 +80,10 @@ const createUser = (req, res, next) => {
       });
     })
     .catch((err) => {
+      if (err.name === 'ValidationError') {
+        next(new ValidationError('Переданы некорректные данные.'));
+        return;
+      }
       if (err.code === 11000) {
         next(new ConflictError('Пользователь с таким email уже существует'));
         return;
@@ -95,7 +99,7 @@ const editUserInfo = (req, res, next) => {
     new: true,
     runValidators: true,
   })
-    .orFail(new NotExistError('Пользователь по указанному _id не найден.'))
+    .orFail(new NotFoundError('Пользователь по указанному _id не найден.'))
     .then((user) => {
       res.send(user);
     })
@@ -115,7 +119,7 @@ const editUserAvatar = (req, res, next) => {
     new: true,
     runValidators: true,
   })
-    .orFail(new NotExistError('Пользователь по указанному _id не найден.'))
+    .orFail(new NotFoundError('Пользователь по указанному _id не найден.'))
     .then((user) => {
       res.send(user);
     })

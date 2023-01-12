@@ -1,5 +1,5 @@
 const Card = require('../models/card');
-const { NotExistError } = require('../errors/notExistError');
+const { NotFoundError } = require('../errors/notFoundError');
 const { PermissionError } = require('../errors/permissionError');
 const { ValidationError } = require('../errors/validationError');
 
@@ -30,7 +30,7 @@ const createCard = (req, res, next) => {
 const deleteCard = (req, res, next) => {
   const { id } = req.params;
   Card.findById(id)
-    .orFail(new NotExistError('Карточка с указанным _id не найдена'))
+    .orFail(new NotFoundError('Карточка с указанным _id не найдена'))
     .then((card) => {
       if (card.owner.toString() !== req.user._id) {
         throw new PermissionError('Нет прав для удаления этой карточки');
@@ -65,7 +65,7 @@ const addLikesCard = (req, res, next) => {
       new: true,
     },
   )
-    .orFail(new NotExistError('Карточка с указанным _id не найдена'))
+    .orFail(new NotFoundError('Карточка с указанным _id не найдена'))
     .then((card) => {
       res.send(card);
     })
@@ -92,7 +92,7 @@ const removeLikesCard = (req, res, next) => {
       new: true,
     },
   )
-    .orFail(new NotExistError('Карточка с указанным _id не найдена'))
+    .orFail(new NotFoundError('Карточка с указанным _id не найдена'))
     .then((card) => {
       res.send(card);
     })
